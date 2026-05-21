@@ -1,0 +1,10 @@
+{
+  "scripts": {
+    "cy:open": "cypress open",
+    "cy:run": "cypress run",
+    "cy:run:login": "cypress run --spec cypress/e2e/login/login.cy.js"
+  },
+  "devDependencies": {
+    "cypress": "^15.15.0"
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "en": {
+    "login": {
+      "welcome": "Welcome to STMS👋",
+      "subtitle": "Please sign-in to your Account",
+      "tenantLabel": "Company",
+      "emailLabel": "Email",
+      "passwordLabel": "Password",
+      "submitButton": "Login",
+      "forgotPassword": "Forgot Password?"
+    },
+    "dashboard": {
+      "generalNav": "General"
+    }
+  },
+  "nl": {
+    "login": {
+      "welcome": "Welkom bij STMS👋",
+      "subtitle": "Meld je aan bij je account",
+      "tenantLabel": "Bedrijf",
+      "emailLabel": "E-mail",
+      "passwordLabel": "Wachtwoord",
+      "submitButton": "Inloggen",
+      "forgotPassword": "Wachtwoord vergeten?"
+    },
+    "dashboard": {
+      "generalNav": "Algemeen"
+    }
+  }
+}

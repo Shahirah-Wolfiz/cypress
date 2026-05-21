@@ -1,0 +1,22 @@
+{
+  "validUser": {
+    "tenant": "Traders",
+    "email": "traders@yopmail.com",
+    "password": "password"
+  },
+  "invalidUser": {
+    "tenant": "Traders",
+    "email": "traders@yopmail.com",
+    "password": "WrongPassword123!"
+  },
+  "emptyFields": {
+    "tenant": "",
+    "email": "",
+    "password": ""
+  },
+  "partialUser": {
+    "tenant": "traders",
+    "email": "traders@yopmail.com",
+    "password": ""
+  }
+}
