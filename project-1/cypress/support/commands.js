@@ -1,25 +1,26 @@
-// ***********************************************
-// This example commands.js shows you how to
-// create various custom commands and overwrite
-// existing commands.
-//
-// For more comprehensive examples of custom
-// commands please read more here:
-// https://on.cypress.io/custom-commands
-// ***********************************************
-//
-//
-// -- This is a parent command --
-// Cypress.Commands.add('login', (email, password) => { ... })
-//
-//
-// -- This is a child command --
-// Cypress.Commands.add('drag', { prevSubject: 'element'}, (subject, options) => { ... })
-//
-//
-// -- This is a dual command --
-// Cypress.Commands.add('dismiss', { prevSubject: 'optional'}, (subject, options) => { ... })
-//
-//
-// -- This will overwrite an existing command --
-// Cypress.Commands.overwrite('visit', (originalFn, url, options) => { ... })
+import LoginPage from '../pages/LoginPage';
+
+/**
+ * Logs in with valid credentials and completes OTP (123456) only when the screen appears.
+ * Skips the test if loginPassword is missing from cypress.env.json.
+ */
+Cypress.Commands.add('loginWithOptionalOtp', function () {
+  cy.fixture('login').then(({ validUser, otp }) => {
+    cy.env(['loginTenant', 'loginEmail', 'loginPassword']).then((env) => {
+      const password = env.loginPassword || validUser.password;
+
+      if (!password) {
+        this.skip();
+      }
+
+      LoginPage.loginWithOptionalOtp(
+        {
+          tenant: env.loginTenant || validUser.tenant,
+          email: env.loginEmail || validUser.email,
+          password,
+        },
+        otp.valid
+      );
+    });
+  });
+});

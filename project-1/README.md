@@ -10,16 +10,18 @@ End-to-end tests for the **Smart Transport Management System (STMS)** staging lo
 
 Install these before setting up the project:
 
-| Requirement | Version | Notes |
-|-------------|---------|--------|
-| **Node.js** | 18+ (LTS recommended) | Includes `npm` |
-| **Git** | Any recent version | To clone the repo |
+
+| Requirement | Version               | Notes             |
+| ----------- | --------------------- | ----------------- |
+| **Node.js** | 18+ (LTS recommended) | Includes `npm`    |
+| **Git**     | Any recent version    | To clone the repo |
+
 
 ### macOS
 
 1. Install **Node.js** (pick one):
-   - [nodejs.org](https://nodejs.org/) — download the LTS installer
-   - **Homebrew:** `brew install node`
+  - [nodejs.org](https://nodejs.org/) — download the LTS installer
+  - **Homebrew:** `brew install node`
 2. Verify in Terminal:
 
 ```bash
@@ -30,7 +32,7 @@ npm -v
 ### Windows
 
 1. Install **Node.js** from [nodejs.org](https://nodejs.org/) (LTS `.msi` installer).
-   - During setup, leave **“Add to PATH”** enabled.
+  - During setup, leave **“Add to PATH”** enabled.
 2. Open **Command Prompt** or **PowerShell** and verify:
 
 ```cmd
@@ -135,7 +137,7 @@ REM Windows Command Prompt
 copy cypress.env.example.json cypress.env.json
 ```
 
-2. Edit `cypress.env.json` with valid staging credentials:
+1. Edit `cypress.env.json` with valid staging credentials:
 
 ```json
 {
@@ -163,11 +165,13 @@ $env:CYPRESS_loginPassword="secret"; npm run cy:run:login
 
 ## Running tests
 
-| Command | Description |
-|---------|-------------|
-| `npm run cy:open` | Interactive Cypress UI — pick specs and watch runs |
-| `npm run cy:run` | Headless run of all specs |
-| `npm run cy:run:login` | Headless run of login spec only |
+
+| Command                | Description                                        |
+| ---------------------- | -------------------------------------------------- |
+| `npm run cy:open`      | Interactive Cypress UI — pick specs and watch runs |
+| `npm run cy:run`       | Headless run of all specs                          |
+| `npm run cy:run:login` | Headless run of login + logout specs               |
+
 
 ### macOS
 
@@ -187,6 +191,36 @@ Artifacts on failure: `cypress/screenshots/`, `cypress/videos/` (gitignored).
 
 ---
 
+## OTP (optional step after login)
+
+OTP appears only on **new device / new network**. Most runs go straight to the dashboard.
+
+### Recommended approach: `loginWithOptionalOtp()`
+
+All login and logout tests use **`cy.loginWithOptionalOtp()`** (or `LoginPage.loginWithOptionalOtp()`):
+
+1. Submit email + password
+2. **If OTP screen is visible** → enter `123456` from `fixtures/login.json`
+3. **If not** → continue to dashboard
+
+No extra setup when OTP is not required.
+
+```javascript
+cy.loginWithOptionalOtp();
+DashboardPage.assertDashboardReady();
+```
+
+### Extra OTP tests (only when OTP appears)
+
+Under **`STMS Login > OTP (only when shown after login)`** in `login.cy.js`:
+
+- Wrong OTP, back button, etc.
+- These tests **skip automatically** if your device is already trusted (no OTP screen)
+
+Valid code: **`123456`** (`login.json` → `otp.valid`).
+
+---
+
 ## Project structure
 
 ```
@@ -195,18 +229,21 @@ project-1/
 ├── cypress.env.example.json   # template for secrets (copy → cypress.env.json)
 ├── cypress/
 │   ├── e2e/login/
-│   │   └── login.cy.js        # login test suite
+│   │   └── login.cy.js        # login, language, OTP (optional), logout
+│   ├── e2e/logout/
+│   │   └── logout.cy.js
 │   ├── fixtures/
 │   │   ├── login.json         # test users (valid, invalid, partial)
 │   │   └── i18n.json          # EN/NL expected labels
 │   ├── pages/
 │   │   ├── LoginPage.js       # login page actions & assertions
+│   │   ├── OtpPage.js         # optional 6-digit OTP step
 │   │   ├── DashboardPage.js   # post-login dashboard checks
 │   │   └── components/
 │   │       └── LanguageToggle.js  # EN/NL switcher (shared)
 │   └── support/
 │       ├── e2e.js             # global hooks / imports
-│       └── commands.js        # custom commands (if added)
+│       └── commands.js        # loginWithOptionalOtp
 └── package.json
 ```
 
@@ -242,11 +279,20 @@ Scenarios cover: EN only, NL only, EN→NL, NL→EN.
 ### 5. Authentication
 
 - **Invalid credentials** (`invalidUser` fixture) → remains on login page.
-- **Valid login** (EN and NL):
+- **Valid login** (EN and NL) via `cy.loginWithOptionalOtp()`:
   1. Set language via `LoginPage.switchLanguage`.
-  2. Fill tenant, email, password (`cypress.env.json` overrides fixture defaults).
-  3. Submit → redirect to dashboard.
-  4. `DashboardPage.assertPageLoaded(language)` checks URL (`/en/d/dashboard`), title, logo, and localized nav label (“General” / “Algemeen”).
+  2. Fill tenant, email, password and submit.
+  3. **If OTP appears** → enter `123456`, then dashboard.
+  4. **If not** → go directly to dashboard.
+  5. `DashboardPage.assertPageLoaded(language)` checks URL, title, logo, and nav label.
+
+### 6. OTP (optional — skips if not shown)
+
+Only runs when staging requires OTP for your device. Tests wrong OTP, back button, valid OTP.
+
+### 7. Logout
+
+`cy.loginWithOptionalOtp()` → dashboard → profile menu → Logout → back to login page.
 
 If no password is configured, success scenarios call `this.skip()`.
 
@@ -254,12 +300,14 @@ If no password is configured, success scenarios call `this.skip()`.
 
 ## Architecture
 
-| Layer | Role |
-|-------|------|
+
+| Layer                     | Role                                             |
+| ------------------------- | ------------------------------------------------ |
 | **Specs** (`login.cy.js`) | Describe blocks, arrange data, call page objects |
-| **Page objects** | Selectors, actions, assertions per screen |
-| **Fixtures** | Static test data and i18n expectations |
-| **`cypress.env.json`** | Secrets and overrides (not in git) |
+| **Page objects**          | Selectors, actions, assertions per screen        |
+| **Fixtures**              | Static test data and i18n expectations           |
+| `**cypress.env.json`**    | Secrets and overrides (not in git)               |
+
 
 Page objects export singleton instances (`export default new LoginPage()`), so specs import and chain methods without instantiating classes in each test.
 
@@ -267,20 +315,22 @@ Page objects export singleton instances (`export default new LoginPage()`), so s
 
 ## Configuration
 
-- **`cypress.config.js`**: `baseUrl`, `specPattern`, `allowCypressEnv: false` (env vars use `CYPRESS_*` prefix or `cypress.env.json` via `cy.env()`).
-- **Secrets**: only in `cypress.env.json` or `CYPRESS_*` environment variables — never in fixtures committed to git.
+- `**cypress.config.js**`: `baseUrl`, `specPattern`, `allowCypressEnv: false` (env vars use `CYPRESS_*` prefix or `cypress.env.json` via `cy.env()`).
+- **Secrets**: only in `cypress.env.json` or `CYPRESS_`* environment variables — never in fixtures committed to git.
 
 ---
 
 ## Troubleshooting
 
-| Issue | What to try |
-|-------|-------------|
-| `npm` / `node` not found | Reinstall Node.js; restart terminal; confirm PATH on Windows |
-| Cypress won’t open | Run `npx cypress install`; check antivirus/firewall |
-| Login success tests skipped | Create `cypress.env.json` with `loginPassword` |
-| Flaky language tests | Staging UI timing — re-run; language toggle retries EN↔NL if labels lag |
-| Wrong environment | Confirm `baseUrl` in `cypress.config.js` points to staging |
+
+| Issue                       | What to try                                                             |
+| --------------------------- | ----------------------------------------------------------------------- |
+| `npm` / `node` not found    | Reinstall Node.js; restart terminal; confirm PATH on Windows            |
+| Cypress won’t open          | Run `npx cypress install`; check antivirus/firewall                     |
+| Login success tests skipped | Create `cypress.env.json` with `loginPassword`                          |
+| Flaky language tests        | Staging UI timing — re-run; language toggle retries EN↔NL if labels lag |
+| Wrong environment           | Confirm `baseUrl` in `cypress.config.js` points to staging              |
+
 
 ---
 

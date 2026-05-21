@@ -7,10 +7,20 @@
       "emailLabel": "Email",
       "passwordLabel": "Password",
       "submitButton": "Login",
-      "forgotPassword": "Forgot Password?"
+      "forgotPassword": "Forgot Password?",
+      "otpInstruction": "Enter your 6-digit verification code",
+      "otpInvalid": "Invalid code",
+      "otpSubmit": "Login"
+    },
+    "forgotPassword": {
+      "title": "Reset Password",
+      "subtitle": "Enter your email",
+      "emailLabel": "Email",
+      "verifyButton": "Verify"
     },
     "dashboard": {
-      "generalNav": "General"
+      "generalNav": "General",
+      "logout": "Logout"
     }
   },
   "nl": {
@@ -21,10 +31,20 @@
       "emailLabel": "E-mail",
       "passwordLabel": "Wachtwoord",
       "submitButton": "Inloggen",
-      "forgotPassword": "Wachtwoord vergeten?"
+      "forgotPassword": "Wachtwoord vergeten?",
+      "otpInstruction": "Voer je 6-cijferige verificatiecode in",
+      "otpInvalid": "Ongeldige code",
+      "otpSubmit": "Code bevestigen"
+    },
+    "forgotPassword": {
+      "title": "Wachtwoord vergeten",
+      "subtitle": "Voer je e-mailadres in",
+      "emailLabel": "E-mail",
+      "verifyButton": "Verifiëren"
     },
     "dashboard": {
-      "generalNav": "Algemeen"
+      "generalNav": "Algemeen",
+      "logout": "Uitloggen"
     }
   }
 }

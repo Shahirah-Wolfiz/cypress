@@ -18,5 +18,9 @@
     "tenant": "traders",
     "email": "traders@yopmail.com",
     "password": ""
+  },
+  "otp": {
+    "valid": "123456",
+    "invalid": "000000"
   }
 }

@@ -2,7 +2,8 @@
   "scripts": {
     "cy:open": "cypress open",
     "cy:run": "cypress run",
-    "cy:run:login": "cypress run --spec cypress/e2e/login/login.cy.js"
+    "cy:run:login": "cypress run --spec cypress/e2e/login/**/*.cy.js,cypress/e2e/logout/**/*.cy.js",
+    "cy:run:logout": "cypress run --spec cypress/e2e/logout/logout.cy.js"
   },
   "devDependencies": {
     "cypress": "^15.15.0"
