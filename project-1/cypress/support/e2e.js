@@ -14,4 +14,11 @@
 // ***********************************************************
 
 // Import commands.js using ES2015 syntax:
-import './commands'
+import './commands';
+
+// Dashboard widgets may still fetch after logout; the app throws on 401 responses.
+Cypress.on('uncaught:exception', (err) => {
+  if (/Unauthenticated/i.test(err.message)) {
+    return false;
+  }
+});

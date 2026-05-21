@@ -1,4 +1,6 @@
 import LoginPage from '../../pages/LoginPage';
+import ForgotPasswordPage from '../../pages/ForgotPasswordPage';
+import OtpPage from '../../pages/OtpPage';
 import DashboardPage from '../../pages/DashboardPage';
 
 describe('STMS Login', () => {
@@ -14,9 +16,24 @@ describe('STMS Login', () => {
       });
     });
 
-    it('should navigate to forgot password', () => {
+  });
+
+  describe('Forgot password', () => {
+    it('should open the forgot password page from login', () => {
       LoginPage.clickForgotPassword();
-      cy.url().should('include', '/unauth/forgot-password');
+      ForgotPasswordPage.assertPageLoaded();
+    });
+
+    it('should open OTP verification page after clicking Verify', () => {
+      cy.fixture('login').then(({ validUser }) => {
+        LoginPage.clickForgotPassword();
+        ForgotPasswordPage.assertPageLoaded();
+        ForgotPasswordPage.submitEmailForVerification({
+          tenant: validUser.tenant,
+          email: validUser.email,
+        });
+        OtpPage.assertOtpVerificationPage({ context: 'forgot' });
+      });
     });
   });
 
@@ -74,6 +91,22 @@ describe('STMS Login', () => {
     });
 
     it('should log in successfully and redirect to the dashboard (English)', function () {
+      LoginPage.switchLanguage('en');
+      LoginPage.assertPageLoaded('en');
+      cy.loginWithOptionalOtp();
+      DashboardPage.assertPageLoaded('en');
+    });
+
+    it('should log in successfully and redirect to the dashboard (Dutch)', function () {
+      LoginPage.switchLanguage('nl');
+      LoginPage.assertPageLoaded('nl');
+      cy.loginWithOptionalOtp();
+      DashboardPage.assertPageLoaded('nl');
+    });
+  });
+
+  describe('OTP (only when shown after login)', function () {
+    beforeEach(function () {
       cy.fixture('login').then(({ validUser }) => {
         cy.env(['loginTenant', 'loginEmail', 'loginPassword']).then((env) => {
           const password = env.loginPassword || validUser.password;
@@ -82,41 +115,63 @@ describe('STMS Login', () => {
             this.skip();
           }
 
-          LoginPage.switchLanguage('en');
-          LoginPage.assertPageLoaded('en');
-
-          LoginPage.login({
+          LoginPage.fillForm({
             tenant: env.loginTenant || validUser.tenant,
             email: env.loginEmail || validUser.email,
             password,
           });
+          LoginPage.submit();
 
-          DashboardPage.assertPageLoaded('en');
+          cy.get('body', { timeout: 20000 }).then(($body) => {
+            if (!OtpPage.isOtpScreen($body)) {
+              cy.log('OTP not required for this device — skipping OTP tests');
+              this.skip();
+            }
+          });
         });
       });
     });
 
-    it('should log in successfully and redirect to the dashboard (Dutch)', function () {
-      cy.fixture('login').then(({ validUser }) => {
-        cy.env(['loginTenant', 'loginEmail', 'loginPassword']).then((env) => {
-          const password = env.loginPassword || validUser.password;
+    it('should display the OTP verification screen', () => {
+      OtpPage.assertPageVisible();
+    });
 
-          if (!password) {
-            this.skip();
-          }
-
-          LoginPage.switchLanguage('nl');
-          LoginPage.assertPageLoaded('nl');
-
-          LoginPage.login({
-            tenant: env.loginTenant || validUser.tenant,
-            email: env.loginEmail || validUser.email,
-            password,
-          });
-
-          DashboardPage.assertPageLoaded('nl');
-        });
+    it('should reach the dashboard with valid OTP', () => {
+      cy.fixture('login').then(({ otp }) => {
+        OtpPage.fillAndSubmit(otp.valid, { waitForDashboard: true });
+        DashboardPage.assertDashboardReady();
       });
+    });
+
+    it('should show an error for wrong OTP', () => {
+      cy.fixture('login').then(({ otp }) => {
+        OtpPage.fillAndSubmit(otp.invalid);
+        OtpPage.assertInvalidOtpError();
+        OtpPage.assertStillOnOtpScreen();
+      });
+    });
+
+    it('should return to login when back is pressed', () => {
+      OtpPage.clickBack();
+      LoginPage.assertStillOnLoginPage();
+      LoginPage.getTenantInput().should('be.visible');
+    });
+  });
+
+  describe('Logout', () => {
+    beforeEach(function () {
+      LoginPage.visit();
+      cy.loginWithOptionalOtp();
+      DashboardPage.assertDashboardReady();
+    });
+
+    it('should logout from dashboard and redirect to the login page', () => {
+      DashboardPage.logout();
+      LoginPage.assertStillOnLoginPage();
+      LoginPage.getTenantInput().should('be.visible');
+      LoginPage.getEmailInput().should('be.visible');
+      LoginPage.getPasswordInput().should('be.visible');
+      LoginPage.getSubmitButton().should('be.visible');
     });
   });
 });

@@ -1,4 +1,5 @@
 import LanguageToggle from './components/LanguageToggle';
+import OtpPage from './OtpPage';
 
 /**
  * Page Object for STMS login (/en/unauth/login)
@@ -12,11 +13,25 @@ class LoginPage {
     passwordInput: 'input[name="password"]',
     submitButton: 'button[type="submit"]',
     forgotPasswordLink: 'a[href*="forgot-password"]',
+    trustDeviceCheckbox: 'input[type="checkbox"]',
     form: 'form',
   };
 
   visit() {
     cy.visit(this.path);
+  }
+
+  /**
+   * Do not trust this device — helps trigger OTP on staging for new-device flows.
+   */
+  dontTrustDevice() {
+    cy.get('body').then(($body) => {
+      const $checkbox = $body.find(`${this.selectors.trustDeviceCheckbox}:visible`);
+      if ($checkbox.length && $checkbox.is(':checked')) {
+        cy.wrap($checkbox.first()).uncheck({ force: true });
+      }
+    });
+    return this;
   }
 
   getTenantInput() {
@@ -63,7 +78,7 @@ class LoginPage {
   }
 
   fillTenant(value) {
-    this.getTenantInput().clear();
+    this.getTenantInput().should('be.enabled').clear({ force: true });
     if (value) {
       this.getTenantInput().type(value);
     }
@@ -71,15 +86,16 @@ class LoginPage {
   }
 
   fillEmail(value) {
-    this.getEmailInput().clear();
+    this.getEmailInput().should('be.enabled').clear({ force: true });
     if (value) {
       this.getEmailInput().type(value);
+      this.getPasswordInput().should('be.enabled', { timeout: 10000 });
     }
     return this;
   }
 
   fillPassword(value) {
-    this.getPasswordInput().clear();
+    this.getPasswordInput().should('be.enabled', { timeout: 10000 }).clear({ force: true });
     if (value) {
       this.getPasswordInput().type(value);
     }
@@ -101,6 +117,13 @@ class LoginPage {
   login({ tenant, email, password }) {
     this.fillForm({ tenant, email, password });
     this.submit();
+    return this;
+  }
+
+  loginWithOptionalOtp({ tenant, email, password }, otp = '123456') {
+    this.fillForm({ tenant, email, password });
+    this.submit();
+    OtpPage.handleIfPresent(otp);
     return this;
   }
 
