@@ -1,11 +1,17 @@
 {
+  "name": "stms-playwright-e2e",
+  "private": true,
+  "type": "module",
   "scripts": {
-    "cy:open": "cypress open",
-    "cy:run": "cypress run",
-    "cy:run:login": "cypress run --spec cypress/e2e/login/**/*.cy.js,cypress/e2e/logout/**/*.cy.js",
-    "cy:run:logout": "cypress run --spec cypress/e2e/logout/logout.cy.js"
+    "test": "playwright test",
+    "test:ui": "playwright test --ui",
+    "test:headed": "playwright test --headed",
+    "test:login": "playwright test tests/e2e/login tests/e2e/logout",
+    "test:logout": "playwright test tests/e2e/logout",
+    "report": "playwright show-report"
   },
   "devDependencies": {
-    "cypress": "^15.15.0"
+    "@playwright/test": "^1.52.0",
+    "dotenv": "^16.5.0"
   }
 }
